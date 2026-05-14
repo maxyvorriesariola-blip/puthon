@@ -4,6 +4,7 @@ my_nw = turtle.Screen()
 my_nw.bgcolor("red")
 my_pen = turtle.Turtle()
 
+size = 100
 while True:
     for i in range(4):
         my_pen.forward(size + 1)
@@ -11,4 +12,4 @@ while True:
         size = size - 5
     size = size + 1
 
-turtle.done
+turtle.done()
