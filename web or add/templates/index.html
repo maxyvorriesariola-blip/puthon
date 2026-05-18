@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chernobyl Unit 4 - Core Overrides</title>
+    <style>
+        body { background-color: #1a1a1a; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 20px; margin: 0; }
+        .hidden { display: none !format; display: none !important; }
+        
+        /* LAUNCH PANEL CONTAINER DESIGN */
+        .launcher-card { max-width: 540px; margin: 40px auto; background: #111; border: 2px solid #ffcc00; padding: 20px; border-radius: 4px; box-shadow: 0 0 15px rgba(255,204,0,0.2); }
+        .top-status-strip { display: flex; justify-content: space-between; background: #000; padding: 8px 12px; font-size: 0.85rem; border-bottom: 1px solid #333; margin-bottom: 15px; }
+        .selection-title { text-align: center; color: #ffcc00; font-size: 1.15rem; font-weight: bold; margin: 15px 0; letter-spacing: 1px; }
+        .option-group { border: 1px solid #00ff00; border-radius: 3px; padding: 12px; margin-bottom: 15px; background: #161616; }
+        .option-group.hw { border-color: #3b82f6; }
+        .grp-header { text-align: center; color: #00ff00; font-size: 0.95rem; margin-top: -22px; background: #111; width: 230px; margin-left: auto; margin-right: auto; font-weight: bold; }
+        .grp-header.hw { color: #3b82f6; width: 280px; }
+        .radio-item { display: block; margin: 8px 0; cursor: pointer; color: #fff; font-size: 0.85rem; }
+        .radio-item input { margin-right: 8px; accent-color: #ff4444; }
+        .sub-desc { color: #aaaaaa; padding-left: 24px; font-size: 0.75rem; margin-top: 2px; display: block; }
+        .input-row { display: flex; align-items: center; justify-content: center; margin: 10px 0; gap: 10px; }
+        .txt-inp { background: #333; border: 1px solid #555; color: #fff; font-family: inherit; padding: 5px; width: 140px; text-align: center; }
+        .engage-btn { display: block; width: 100%; font-family: inherit; background: #ff4444; color: #fff; font-size: 1.1rem; font-weight: bold; border: 2px solid #b22222; padding: 12px; cursor: pointer; border-radius: 4px; margin-top: 15px; }
+        
+        /* PORTAL POPUP DESIGN */
+        .portal-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #0a0a0a; border: 2px solid #00ff00; padding: 20px; z-index: 100; width: 340px; box-shadow: 0 0 30px rgba(0,255,0,0.4); }
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99; }
+        
+        /* LIVE MAIN CONTROL ROOM SIMULATION DESIGN */
+        .control-room { max-width: 1050px; margin: 0 auto; background: #1a1a1a; padding: 10px; }
+        .top-layout { display: flex; gap: 15px; margin-bottom: 10px; justify-content: center; }
+        .task-card { background: #1a1a1a; border: 2px solid #00ff00; border-radius: 3px; width: 320px; padding: 10px; box-sizing: border-box; }
+        .task-screen { background: #000; color: #ffcc00; font-weight: bold; padding: 10px; height: 75px; text-align: center; display: flex; align-items: center; justify-content: center; border-radius: 3px; border: 1px solid #333; font-size: 0.95rem; }
+        .guide-screen { background: #000; color: #aaaaaa; font-size: 0.78rem; padding: 8px; margin-top: 8px; border-radius: 3px; border: 1px solid #222; line-height: 1.4; }
+        .canvas-monitor-panel { display: flex; gap: 12px; background: #1a1a1a; align-items: center; }
+        canvas { background: #050505; border: 1px solid #333; }
+        .central-data-readout { background: #000; color: #00ff00; padding: 8px; text-align: center; border-radius: 4px; font-size: 0.88rem; line-height: 1.6; margin-bottom: 10px; border: 1px solid #222; white-space: pre-wrap; }
+        .btn-matrix { display: flex; gap: 20px; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .btn-col { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .action-button { font-family: inherit; font-size: 0.82rem; font-weight: bold; padding: 8px; border: none; cursor: pointer; border-radius: 3px; color: white; }
+        .flex-row-btn { display: flex; align-items: center; gap: 4px; background: transparent; border: none; padding: 0; }
+        .inp-sml { width: 45px; background: #333; color: white; border: 1px solid #555; text-align: center; padding: 3px; font-family: inherit; font-size: 0.8rem; }
+        .scram-btn { font-family: inherit; background: red; color: white; font-weight: bold; font-size: 1.1rem; height: 55px; width: 110px; cursor: pointer; border: 2px solid #8b0000; border-radius: 4px; }
+        .quit-btn { font-family: inherit; background: #444; color: white; font-weight: bold; padding: 5px 10px; border: none; cursor: pointer; margin-top: 5px; width: 110px; border-radius: 3px; font-size: 0.8rem; }
+        .shop-box { border: 2px solid #ffcc00; padding: 10px; border-radius: 4px; margin-bottom: 15px; background: #1a1a1a; }
+        .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
+        .shop-btn { font-family: inherit; font-size: 0.78rem; font-weight: bold; padding: 8px; cursor: pointer; border-radius: 3px; text-align: center; border: 1px solid #555; }
+        .log-area { background: black; color: #00ff00; border: 1px solid #333; height: 85px; overflow-y: auto; padding: 8px; font-size: 0.82rem; line-items: 1.4; border-radius: 3px; }
+        
+        /* MODAL REPORT DIALOG */
+        .report-window { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #050505; padding: 3px; z-index: 200; width: 440px; box-shadow: 0 0 25px rgba(0,255,255,0.3); }
+        .report-inner { background: #111; border: 1px solid #333; padding: 20px; text-align: center; color: #fff; }
+        
+        /* WARNING EMERGENCY FLASH FLASHERS */
+        .emergency-flash { animation: panelAlert 0.8s infinite alternate; }
+        @keyframes panelAlert { from { box-shadow: inset 0 0 5px #ff0000, 0 0 5px #ff0000; } to { box-shadow: inset 0 0 30px #ff0000, 0 0 25px #ff0000; } }
+    </style>
+</head>
+<body>
+
+<div id="launcher-view" class="launcher-card">
+    <div class="top-status-strip">
+        <span id="lbl-top-op-sync">OPERATOR: Guest (Local Profile)</span>
+        <button onclick="openAccountPortal()" style="background:#222; color:#ffcc00; font-family:inherit; border:1px solid #444; font-weight:bold; cursor:pointer; font-size:0.75rem; padding:2px 6px;">🔑 SIGN IN / ACCOUNT</button>
+    </div>
+    
+    <div style="text-align:center; color:#ffcc00; font-weight:bold; font-size:1.1rem; letter-spacing:1px;">☢️ LOCAL OVERRIDE TERMINAL ☢️</div>
+    <div class="input-row">
+        <label style="font-size:0.85rem;">ACTIVE OPERATOR:</label>
+        <input type="text" id="inp-username" value="Guest" class="txt-inp" onkeyup="syncLocalUsernameLabel()">
+    </div>
+
+    <div class="selection-title">⚙️ CONFIGURATION ROUTINE ENGINE ⚙️</div>
+    <div class="option-group">
+        <div class="grp-header">☢️ SELECT CORE DIFFICULTY ☢️</div>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="Guided">GUIDED MODE<span class="sub-desc">-> 30s countdown safety threshold, starter mission.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="Easy" checked>EASY MODE<span class="sub-desc">-> 20s countdown safety threshold, standard rules.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="Medium">MEDIUM MODE<span class="sub-desc">-> 15s countdown safety threshold, multi-step tasks.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="Hard">HARD MODE<span class="sub-desc">-> 10s countdown safety threshold, rapid heat curve.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="VeryHard">VERY HARD MODE<span class="sub-desc">-> 7s countdown safety threshold, extreme thermal spikes.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="Impossible">IMPOSSIBLE MODE<span class="sub-desc">-> 3s countdown safety threshold, zero room for error.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-diff" value="Endless">ENDLESS MODE<span class="sub-desc">-> No timeout restrictions! Survive for ultimate high scores.</span></label>
+    </div>
+
+    <div class="option-group hw">
+        <div class="grp-header hw">💻 HARDWARE PERFORMANCE SPEC 💻</div>
+        <label class="radio-item"><input type="radio" name="rad-hw" value="Phone">PHONE MODE<span class="sub-desc">-> Low particle count (8) & 140ms update interval. Ideal for low RAM / CPU.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-hw" value="Laptop" checked>LAPTOP MODE<span class="sub-desc">-> Balanced optimization (18 particles) & 90ms update interval. Default.</span></label>
+        <label class="radio-item"><input type="radio" name="rad-hw" value="PC">PC DESKTOP MODE<span class="sub-desc">-> Max ultra density (32 particles) & 45ms update interval. Uncapped frame rates.</span></label>
+    </div>
+
+    <button class="engage-btn" onclick="submitLauncherConfiguration()">⚡ ENGAGE RBMK OVERRIDE CORE ⚡</button>
+</div>
+
+<div id="simulation-view" class="control-room hidden">
+    <h2 style="text-align: center; color: #00ff00; margin: 5px 0 0 0; font-size: 1.5rem; letter-spacing: 2px;">☢️ RBMK-1000 CORE MONITOR ☢️</h2>
+    <div id="txt-sys-status" style="text-align: center; font-weight: bold; font-size: 1.1rem; color: green; margin-bottom: 8px;">SYSTEM READY</div>
+
+    <div class="top-layout">
+        <div class="task-card">
+            <div style="text-align: center; color: #00ff00; font-size: 0.85rem; font-weight: bold; margin-bottom: 4px;">MISSION OBJECTIVE</div>
+            <div id="txt-mission-task" class="task-screen">ALL MISSIONS COMPLETE</div>
+            <div class="guide-screen">
+                • PULL RODS: ↑Power/Heat<br>
+                • INSERT RODS: ↓Power/Heat<br>
+                • VOID COEFFICIENT: Low water spikes power!<br>
+                • GRAPHITE FLAW: Hitting AZ-5 while rods are too low spikes power for 3 seconds!
+            </div>
+        </div>
+
+        <div class="canvas-monitor-panel">
+            <canvas id="cnv-chart" width="350" height="150"></canvas>
+            <canvas id="cnv-particles" width="200" height="150"></canvas>
+            <canvas id="cnv-rods" width="40" height="150"></canvas>
+        </div>
+    </div>
+
+    <div id="txt-central-readout" class="central-data-readout">DATA CORE STREAM LOADING...</div>
+
+    <div class="btn-matrix">
+        <div class="btn-col">
+            <button class="action-button" style="background:#ff4444;" onclick="triggerSimAction('pull')">PULL RODS (-10)</button>
+            <button class="action-button" style="background:#4444ff;" onclick="triggerSimAction('insert')">INSERT RODS (+10)</button>
+            
+            <div class="flex-row-btn">
+                <span style="font-size:0.75rem; color:#fff;">Amt:</span>
+                <input type="text" id="inp-cool-amt" value="500" class="inp-sml">
+                <button class="action-button" style="background:#00ced1; color:black; padding: 5px 8px;" onclick="triggerSimAction('cool', parseInt(document.getElementById('inp-cool-amt').value))">PUMP COOLANT</button>
+            </div>
+            <div class="flex-row-btn">
+                <span style="font-size:0.75rem; color:#fff;">Amt:</span>
+                <input type="text" id="inp-backup-amt" value="1000" class="inp-sml">
+                <button class="action-button" style="background:#20b2aa; padding: 5px 8px;" onclick="triggerSimAction('backup', parseInt(document.getElementById('inp-backup-amt').value))">BACKUP RES</button>
+            </div>
+            <div class="flex-row-btn" style="grid-column: span 2; justify-content: center;">
+                <span style="font-size:0.75rem; color:#fff;">Amt(MPa):</span>
+                <input type="text" id="inp-vent-amt" value="5.0" class="inp-sml" style="width:35px;">
+                <button class="action-button" id="btn-vent-sys" style="background:#f0e68c; color:black; width:105px;" onclick="triggerSimAction('vent', parseFloat(document.getElementById('inp-vent-amt').value))">VENT STEAM</button>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="scram-btn" onclick="triggerSimAction('az5')">AZ-5<br>(SCRAM)</button><br>
+            <button class="quit-btn" onclick="quitActiveSimulation()">QUIT GAME</button>
+        </div>
+    </div>
+
+    <div class="shop-box">
+        <div id="txt-shop-banner" style="text-align:center; font-weight:bold; font-size:0.85rem; color:#ffcc00; letter-spacing:1px;">💰 UPGRADE & MAINTENANCE SHOP 💰</div>
+        <div id="txt-shop-metrics" style="text-align:center; font-size:0.8rem; color:#fff; margin: 3px 0;">LOADING BALANCE...</div>
+        <div class="shop-grid">
+            <button class="shop-btn" style="background:#22c55e; color:black;" onclick="triggerSimAction('shop_water')">BUY WATER +2500L<br>(Cost: 200 Cr)</button>
+            <button class="shop-btn" id="btn-shop-valves" style="background:#eab308; color:black;" onclick="triggerSimAction('shop_valves')">REINFORCE VALVES +2MPa<br>(Cost: 500 Cr)</button>
+            <button class="shop-btn" id="btn-shop-turbine" style="background:#a855f7; color:white;" onclick="triggerSimAction('shop_turbine')">TURBINE UPGRADE<br>(Loading...)</button>
+            <button class="shop-btn" style="background:#3b82f6; color:white;" onclick="triggerSimAction('shop_nitro')">NITRO FLUSH (-1000°C)<br>(Cost: 600 Cr)</button>
+        </div>
+    </div>
+
+    <div style="font-size:0.85rem; font-weight:bold; margin-bottom:3px;">OPERATIONAL LOG</div>
+    <div id="div-log-monitor" class="log-area"></div>
+</div>
+
+<div id="portal-overlay" class="overlay hidden" onclick="closeAccountPortal()"></div>
+<div id="portal-modal" class="portal-modal hidden">
+    <div style="text-align:center; color:#00ff00; font-weight:bold; font-size:0.95rem; margin-bottom:10px;">⚙️ SECURE SERVER PORTAL ⚙️</div>
+    <div style="display:flex; justify-content:center; gap:15px; font-size:0.8rem; margin-bottom:12px;">
+        <label><input type="radio" name="rad-portal-mode" value="login" checked onchange="togglePortalFields()"> SIGN IN</label>
+        <label><input type="radio" name="rad-portal-mode" value="register" onchange="togglePortalFields()"> SIGN UP</label>
+    </div>
+    <div style="font-size:0.8rem; text-align:center; margin-bottom:4px;">OPERATOR ID / USERNAME:</div>
+    <input type="text" id="inp-portal-uid" class="txt-inp" style="width:90%; display:block; margin:0 auto 10px auto;">
+    
+    <div id="lbl-portal-email" style="font-size:0.8rem; text-align:center; margin-bottom:4px;" class="hidden">BACKUP GMAIL ADDRESS:</div>
+    <input type="text" id="inp-portal-email" class="txt-inp class-email-field hidden" style="width:90%; display:block; margin:0 auto 10px auto;">
+    
+    <div id="txt-portal-hint" style="font-size:0.75rem; color:#888; text-align:center; margin-bottom:12px; font-style:italic;">Enter your ID to load existing cloud stats.</div>
+    <button id="btn-portal-trigger" style="background:#3b82f6; color:white; width:100%; font-family:inherit; font-weight:bold; padding:8px; border:none; cursor:pointer;" onclick="executePortalAuthentication()">LOG INTO ACCOUNT</button>
+</div>
+
+<div id="report-modal" class="report-window hidden">
+    <div class="report-inner" id="report-inner-frame">
+        <h3 style="margin-top:0; color:#00ffff;" id="txt-report-title">⚙️ FINAL CONTROL REPORT ⚙️</h3>
+        <div id="txt-report-body" style="white-space:pre-wrap; font-size:0.85rem; margin-bottom:15px; text-align:left; color:#aaa; line-height:1.4;"></div>
+        <button style="font-family:inherit; font-weight:bold; padding:8px 16px; cursor:pointer; border:none; background:#00ffff; color:black;" onclick="closeReportScreen()">RETURN TO MAIN MENU</button>
+    </div>
+</div>
+
+<script>
+    let simIntervalTracker = null;
+    let particleAnimationId = null;
+    let registeredMissionObjectives = [];
+    let savedTemperatureHistory = Array(20).fill(300);
+    let alertFlashToggle = false;
+    let simulationIsActive = false;
+
+    // Accounts local tracking cache
+    function syncLocalUsernameLabel() {
+        const op = document.getElementById('inp-username').value.trim() || "Guest";
+        fetch('/api/accounts').then(r => r.json()).then(accounts => {
+            if(op in accounts) {
+                document.getElementById('lbl-top-op-sync').innerText = `OPERATOR: ${op} (Loaded)`;
+                document.getElementById('lbl-top-op-sync').style.color = '#00ff00';
+            } else {
+                document.getElementById('lbl-top-op-sync').innerText = `OPERATOR: ${op} (Local Profile)`;
+                document.getElementById('lbl-top-op-sync').style.color = '#aaa';
+            }
+        });
+    }
+
+    function openAccountPortal() {
+        document.getElementById('portal-overlay').classList.remove('hidden');
+        document.getElementById('portal-modal').classList.remove('hidden');
+    }
+    function closeAccountPortal() {
+        document.getElementById('portal-overlay').classList.add('hidden');
+        document.getElementById('portal-modal').classList.add('hidden');
+    }
+    function togglePortalFields() {
+        const mode = document.querySelector('input[name="rad-portal-mode"]:checked').value;
+        if(mode === "login") {
+            document.getElementById('lbl-portal-email').classList.add('hidden');
+            document.getElementById('inp-portal-email').classList.add('hidden');
+            document.getElementById('txt-portal-hint').innerText = "Enter your ID to load existing cloud stats.";
+            document.getElementById('btn-portal-trigger').innerText = "LOG INTO ACCOUNT";
+            document.getElementById('btn-portal-trigger').style.background = "#3b82f6";
+        } else {
+            document.getElementById('lbl-portal-email').classList.remove('hidden');
+            document.getElementById('inp-portal-email').classList.remove('hidden');
+            document.getElementById('txt-portal-hint').innerText = "Saves stats directly to your profile database.";
+            document.getElementById('btn-portal-trigger').innerText = "CREATE CLOUD ACCOUNT";
+            document.getElementById('btn-portal-trigger').style.background = "#22c55e";
+        }
+    }
+
+    function executePortalAuthentication() {
+        const mode = document.querySelector('input[name="rad-portal-mode"]:checked').value;
+        const uid = document.getElementById('inp-portal-uid').value.trim();
+        const mail = document.getElementById('inp-portal-email').value.trim();
+        if(!uid) { alert("Operator ID Field cannot be blank."); return; }
+
+        fetch('/api/accounts').then(r => r.json()).then(accounts => {
+            if(mode === "login") {
+                if(uid in accounts) {
+                    document.getElementById('inp-username').value = uid;
+                    document.getElementById('lbl-top-op-sync').innerText = `OPERATOR: ${uid} (Cloud Verified)`;
+                    document.getElementById('lbl-top-op-sync').style.color = '#00ff00';
+                    alert(`Welcome back, Operator ${uid}!\nProfile loaded successfully.`);
+                    closeAccountPortal();
+                } else { alert(`Operator ID '${uid}' not found.\nSwitch to SIGN UP to register.`); }
+            } else {
+                if(!mail || !mail.includes("@")) { alert("Please input a valid backup Gmail address."); return; }
+                if(uid in accounts) { alert("Username already active."); return; }
+                // Dynamic register via launcher engine pipeline
+                fetch('/api/launcher/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: uid, difficulty: "Easy", hardware_mode: "Laptop", email: mail, action_type: "register"})
+                }).then(r => r.json()).then(res => {
+                    if(res.error) { alert(res.error); }
+                    else {
+                        document.getElementById('inp-username').value = uid;
+                        document.getElementById('lbl-top-op-sync').innerText = `OPERATOR: ${uid} (Synced)`;
+                        document.getElementById('lbl-top-op-sync').style.color = '#22c55e';
+                        alert(`Account '${uid}' generated!\nBound to: ${mail}`);
+                        closeAccountPortal();
+                    }
+                });
+            }
+        });
+    }
+
+    function submitLauncherConfiguration() {
+        const user = document.getElementById('inp-username').value.trim() || "Guest";
+        const diff = document.querySelector('input[name="rad-diff"]:checked').value;
+        const hw = document.querySelector('input[name="rad-hw"]:checked').value;
+
+        fetch('/api/launcher/submit', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: user, difficulty: diff, hardware_mode: hw, action_type: "local"})
+        }).then(r => r.json()).then(res => {
+            if(res.success) {
+                registeredMissionObjectives = res.tasks;
+                document.getElementById('launcher-view').classList.add('hidden');
+                document.getElementById('simulation-view').classList.remove('hidden');
+                simulationIsActive = true;
+                
+                // Initialize Canvases
+                initRenderComponents(hw);
+                renderStateUpdate(res.game_state);
+                
+                // Run Clocks
+                simIntervalTracker = setInterval(triggerSimulationTick, 1000);
+            }
+        });
+    }
+
+    // ==========================================
+    // SIMULATION ENGINE INTERACTION PIPELINES
+    // ==========================================
+    function triggerSimulationTick() {
+        if(!simulationIsActive) return;
+        fetch('/api/simulation/tick').then(r => r.json()).then(state => {
+            renderStateUpdate(state);
+        });
+    }
+
+    function triggerSimAction(actName, amountVal = 0) {
+        if(!simulationIsActive) return;
+        fetch('/api/simulation/action', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: actName, amount: amountVal})
+        }).then(r => r.json()).then(state => {
+            renderStateUpdate(state);
+        });
+    }
+
+    function renderStateUpdate(state) {
+        // Evaluate Terminal Shutdown Endpoints
+        if(!state.is_running) {
+            simulationIsActive = false;
+            clearInterval(simIntervalTracker);
+            cancelAnimationFrame(particleAnimationId);
+            
+            let reportTitle = "⚙️ FINAL CONTROL REPORT ⚙️";
+            let borderStyleColor = "#00ffff";
+            if(state.status_msg === "VICTORY") {
+                reportTitle = "🏆 MISSION VICTORY 🏆\nReactor 4 Stabilized!";
+                borderStyleColor = "#00ff00";
+            } else if(state.status_msg === "TERMINATED") {
+                reportTitle = "☢️ SYSTEM RUPTURE INTERCEPTED ☢️";
+                borderStyleColor = "#ff3333";
+            }
+            
+            const reportText = `------------------------------------\n` +
+                               `Final Core Temperature: ${state.temperature}°C\n` +
+                               `Final Power Output:     ${state.power} MW\n` +
+                               `Final Pressure Load:    ${state.pressure.toFixed(2)} MPa\n` +
+                               `Control Rod Insertion:  ${state.rods}/211\n` +
+                               `Radiation Discharge:    ${state.radiation} mSv\n` +
+                               `Total Survival Time:    ${state.total_time}s\n` +
+                               `------------------------------------\n` +
+                               `STATUS CODE: CLEAR. OPERATION RETRIEVED.`;
+                               
+            document.getElementById('txt-report-title').innerText = reportTitle;
+            document.getElementById('txt-report-title').style.color = borderStyleColor;
+            document.getElementById('txt-report-body').innerText = reportText;
+            document.getElementById('report-inner-frame').style.borderColor = borderStyleColor;
+            document.getElementById('report-modal').style.boxShadow = `0 0 25px ${borderStyleColor}`;
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        // Handle Alarm Flashing Toggle States
+        const isCritical = state.temperature > 2500 || state.pressure > (state.max_pressure - 7.0) || state.radiation > 500 || state.rods < 30 || state.scram_delayed_ticks > 0;
+        alertFlashToggle = !alertFlashToggle;
+        
+        let statusMsgString = state.status_msg;
+        if(isCritical) {
+            document.getElementById('simulation-view').classList.add('emergency-flash');
+            document.getElementById('txt-sys-status').style.color = alertFlashToggle ? "red" : "#1a1a1a";
+            if(state.scram_delayed_ticks > 0) statusMsgString = `☢️ GRAPHITE TIP INSERTS DETONATING POWER! ${state.scram_delayed_ticks}s REMAINING ☢️`;
+            else if(state.rods < 30) statusMsgString = "⚠️ WARNING: OPERATIONAL SAFETY MARGIN VIOLATION! RODS TOO LOW ⚠️";
+            else if(state.xenon > 0.5) statusMsgString = "⚠️ XENON POISONING MASK DETECTED ⚠️";
+        } else {
+            document.getElementById('simulation-view').classList.remove('emergency-flash');
+            document.getElementById('txt-sys-status').style.color = "green";
+        }
+        document.getElementById('txt-sys-status').innerText = statusMsgString;
+
+        // Render Task text strings
+        let taskDescStr = "ALL MISSIONS COMPLETE";
+        if(state.difficulty === "Endless") { taskDescStr = "SURVIVE AT ALL COSTS"; }
+        else if(state.task_stage <= registeredMissionObjectives.length) {
+            taskDescStr = `Task ${state.task_stage}: ${registeredMissionObjectives[state.task_stage - 1][0]}`;
+        }
+        document.getElementById('txt-mission-task').innerText = taskDescStr;
+
+        // Central data readouts formatting mapping
+        const pTank = state.water_supply > 0 ? `Tank ${4 - Math.floor((state.water_supply-1)/2500)}/4` : "EMPTY";
+        const bTank = state.backup_water_supply > 0 ? `Tank ${2 - Math.floor((state.backup_water_supply-1)/10000)}/2` : "EMPTY";
+        const voidAlert = state.void_coefficient < 0.2 ? `STABLE (${(state.void_coefficient*100).toFixed(0)}%)` : `💥 STEAM VOID CRITICAL (${(state.void_coefficient*100).toFixed(0)}%)`;
+        
+        let modeTimerLabel = `MODE: ${state.difficulty.toUpperCase()} | HW: ${state.hardware_mode.toUpperCase()} | OPERATOR: ${state.username.toUpperCase()}`;
+        if(state.difficulty === 'Endless') modeTimerLabel += ` | SURVIVAL TIME: ${state.total_time}s`;
+        else if(state.danger_timer > 0) modeTimerLabel += ` | !!! MELTDOWN IN: ${state.meltdown_limit - state.danger_timer}s !!!`;
+
+        document.getElementById('txt-central-readout').innerText = 
+            `${modeTimerLabel}\n` +
+            `[TEMP: ${state.temperature}°C] [PWR: ${state.power}MW] [PRES: ${state.pressure.toFixed(2)}/${state.max_pressure.toFixed(1)}MPa]\n` +
+            `[RODS: ${state.rods}/211] [RAD: ${state.radiation}mSv] [XENON MASK: ${(state.xenon*100).toFixed(1)}%] [VOID EFFECT: ${voidAlert}]\n` +
+            `WATER: ${state.water_supply}L (${pTank}) | BACKUP: ${state.backup_water_supply}L (${bTank})`;
+
+        // Venting system styling updates
+        document.getElementById('btn-vent-sys').style.background = state.pressure > (state.max_pressure - 5.0) ? "orange" : "#f0e68c";
+
+        // Shop Interface details updating
+        document.getElementById('txt-shop-metrics').innerText = `OPERATOR BALANCE: ${state.credits} CREDITS | MAX PRESSURE LIMIT: ${state.max_pressure.toFixed(1)} MPa | TURBINE: Lvl ${state.turbine_level}`;
+        const valveBtn = document.getElementById('btn-shop-valves');
+        if(state.max_pressure >= 35.0) {
+            valveBtn.innerText = "VALVES MAXED OUT\n(35 MPa)";
+            valveBtn.disabled = true;
+            valveBtn.style.background = "#666";
+        }
+        document.getElementById('btn-shop-turbine').innerHTML = `TURBINE UPGRADE (Lvl ${state.turbine_level+1})<br>(Cost: ${state.turbine_level*400} Cr)`;
+
+        // Push history data points & call redraw routines
+        savedTemperatureHistory.push(state.temperature);
+        if(savedTemperatureHistory.length > 20) savedTemperatureHistory.shift();
+        drawCoreChart();
+        drawControlRods(state.rods);
+        currentCoreEngineTemp = state.temperature;
+        currentCoreEnginePower = state.power;
+        currentCoreEngineXenon = state.xenon;
+        currentCoreEngineRods = state.rods;
+        currentCoreEngineTicks = state.scram_delayed_ticks;
+
+        // Synchronize scroll-area message board log boxes
+        const logBox = document.getElementById('div-log-monitor');
+        logBox.innerHTML = state.log_messages.map(m => `<div>&gt; ${m}</div>`).join('');
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function quitActiveSimulation() {
+        fetch('/api/simulation/quit', {method: 'POST'}).then(() => {
+            location.reload();
+        });
+    }
+    function closeReportScreen() {
+        document.getElementById('report-modal').classList.add('hidden');
+        location.reload();
+    }
+
+    // ==========================================
+    // SECTION 3: VISUAL GRAPHICS CANVAS ENG
+    // ==========================================
+    let currentCoreEngineTemp = 300;
+    let currentCoreEnginePower = 400;
+    let currentCoreEngineXenon = 0.0;
+    let currentCoreEngineRods = 180;
+    let currentCoreEngineTicks = 0;
+    let localizedParticlePool = [];
+
+    function initRenderComponents(hardwareMode) {
+        // Setup Grid background guides
+        const c = document.getElementById('cnv-chart');
+        const ctx = c.getContext('2d');
+        ctx.strokeStyle = "#222";
+        ctx.lineWidth = 1;
+        for(let y = 30; y < 150; y += 30) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(350, y); ctx.stroke();
+        }
+
+        // Populate moving dynamic subatomic vectors
+        const pCount = hardwareMode === "Phone" ? 8 : hardwareMode === "PC" ? 32 : 18;
+        localizedParticlePool = [];
+        for(let i=0; i<pCount; i++) {
+            localizedParticlePool.push({
+                x: Math.random() * 200, y: Math.random() * 150,
+                dx: (Math.random() - 0.5) * 3, dy: (Math.random() - 0.5) * 2
+            });
+        }
+        
+        const fpsInterval = hardwareMode === "Phone" ? 140 : hardwareMode === "PC" ? 45 : 90;
+        animateSubatomicCoreLoop(fpsInterval);
+    }
+
+    function drawCoreChart() {
+        const c = document.getElementById('cnv-chart');
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, 350, 150);
+        
+        // Redraw grid paths
+        ctx.strokeStyle = "#222";
+        for(let y = 30; y < 150; y += 30) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(350, y); ctx.stroke();
+        }
+
+        if(savedTemperatureHistory.length < 2) return;
+        ctx.strokeStyle = "#00ff00";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        for(let i=0; i<savedTemperatureHistory.length; i++) {
+            let x = (i / 19) * 350;
+            let y = 150 - (savedTemperatureHistory[i] / 4500 * 150);
+            if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    function drawControlRods(insertedCount) {
+        const c = document.getElementById('cnv-rods');
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, 40, 150);
+        
+        let cols = 8; let cellW = 3; let cellH = 4; let gap = 1;
+        for(let i=0; i<211; i++) {
+            let col = i % cols;
+            let row = Math.floor(i / cols);
+            let x = 5 + col * (cellW + gap);
+            let y = 145 - row * (cellH + gap);
+            
+            ctx.fillStyle = (i < insertedCount) ? "#00dfff" : "#222222";
+            ctx.fillRect(x, y, cellW, cellH);
+        }
+    }
+
+    let lastTimestampFrame = 0;
+    function animateSubatomicCoreLoop(targetInterval) {
+        function run(ts) {
+            particleAnimationId = requestAnimationFrame(run);
+            if(ts - lastTimestampFrame < targetInterval) return;
+            lastTimestampFrame = ts;
+
+            const c = document.getElementById('cnv-particles');
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, 200, 150);
+
+            let speed = 1 + (currentCoreEnginePower / 1000);
+            let color = "cyan";
+            if (currentCoreEngineTemp >= 2500) color = "red";
+            else if (currentCoreEngineTemp >= 1500) color = "orange";
+            if (currentCoreEngineXenon > 0.5 || currentCoreEngineRods < 30 || currentCoreEngineTicks > 0) color = "red";
+
+            // Draw atoms array loops
+            ctx.fillStyle = color;
+            localizedParticlePool.forEach(p => {
+                p.x += p.dx * speed; p.y += p.dy * speed;
+                if(p.x < 0) p.x = 200; if(p.x > 200) p.x = 0;
+                if(p.y < 0) p.y = 150; if(p.y > 150) p.y = 0;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, 2*Math.PI); ctx.fill();
+            });
+
+            // Alarm Flash overlay red box layer
+            if((currentCoreEngineXenon > 0.5 || currentCoreEngineRods < 30 || currentCoreEngineTicks > 0) && alertFlashToggle) {
+                ctx.fillStyle = "rgba(255, 0, 0, 0.25)";
+                ctx.fillRect(0, 0, 200, 150);
+            }
+
+            // Digital indicator text labels overlays
+            ctx.fillStyle = "white";
+            ctx.font = "bold 11px Courier New";
+            ctx.textAlign = "center";
+            ctx.fillText(`${currentCoreEngineTemp}°C`, 100, 140);
+        }
+        requestAnimationFrame(run);
+    }
+    
+    // Initial sync routine running on script mount load
+    syncLocalUsernameLabel();
+</script>
+
+</body>
+</html>

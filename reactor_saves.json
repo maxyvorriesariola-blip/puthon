@@ -1,0 +1,18 @@
+{
+    "Guest": {
+        "credits": 8000,
+        "max_pressure": 25.0,
+        "turbine_level": 1,
+        "email": "None",
+        "mask_quality": 1,
+        "shielding_level": 2
+    },
+    "Max": {
+        "credits": 1120,
+        "max_pressure": 25.0,
+        "turbine_level": 1,
+        "mask_quality": 1,
+        "shielding_level": 1,
+        "email": "None"
+    }
+}
